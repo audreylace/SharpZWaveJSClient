@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using AudreysCloud.Community.SharpZWaveJSClient.Exceptions;
 using AudreysCloud.Community.SharpZWaveJSClient.Protocol;
+using AudreysCloud.Community.SharpZWaveJSClient.Events;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
@@ -15,39 +16,51 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	public enum SharpZWaveJSConnectionState
 	{
 		Closed,
+		Closing,
 		Connecting,
 		Open
 	}
 
 	public sealed class SharpZWaveJSClient
 	{
-		internal BroadcastBlock<IServerEvent> Events { get; private set; }
-		internal ClientWebSocket Socket { get; private set; }
+		//TODO - Change type to a general purpose event type
+		private BroadcastBlock<ISharpZWaveJSClientEvent> EventsBroadcaster { get; set; }
 
-		public SharpZWaveJSConnectionState State { get; private set; }
+		private ClientWebSocket Socket { get; set; }
+		private CancellationTokenSource ShutdownTokenSource { get; set; }
 
-		public List<JsonConverter<IServerEvent>> EventConverters { get; private set; }
+
+		public SharpZWaveJSConnectionState State
+		{ get; private set; }
+		public List<JsonConverter<IRemoteServerEvent>> EventConverters { get; private set; }
 		public int MaxMessageSize { get; set; }
 		public IServerVersionInfo ServerInfo { get; private set; }
 
 		public SharpZWaveJSClient()
 		{
-			Events = new BroadcastBlock<IServerEvent>((IServerEvent e) => throw new NotImplementedException());
-			EventConverters = new List<JsonConverter<IServerEvent>>();
+			EventsBroadcaster = new BroadcastBlock<ISharpZWaveJSClientEvent>((ISharpZWaveJSClientEvent e) => throw new NotImplementedException());
+			EventConverters = new List<JsonConverter<IRemoteServerEvent>>();
 			Socket = new ClientWebSocket();
 			MaxMessageSize = 1024 * 1024; //1 Megabyte
 			State = SharpZWaveJSConnectionState.Closed;
 		}
-		public IDisposable LinkTo(ITargetBlock<IServerEvent> targetBlock, DataflowLinkOptions linkOptions)
+		public IDisposable LinkTo(ITargetBlock<ISharpZWaveJSClientEvent> targetBlock, DataflowLinkOptions linkOptions)
 		{
-			return Events.LinkTo(targetBlock, linkOptions);
+			return EventsBroadcaster.LinkTo(targetBlock, linkOptions);
 		}
-		public IDisposable LinkTo(ITargetBlock<IServerEvent> targetBlock)
+		public IDisposable LinkTo(ITargetBlock<ISharpZWaveJSClientEvent> targetBlock)
 		{
-			return Events.LinkTo(targetBlock);
+			return EventsBroadcaster.LinkTo(targetBlock);
 		}
+
 		public async Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
 		{
+
+			if (State != SharpZWaveJSConnectionState.Closed)
+			{
+				throw new InvalidOperationException();
+			}
+
 			State = SharpZWaveJSConnectionState.Connecting;
 			try
 			{
@@ -57,7 +70,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 				{
 					cancellationToken.ThrowIfCancellationRequested();
 
-					using (System.IO.MemoryStream stream = await ReceiveJsonMessage(cancellationToken))
+					using (System.IO.MemoryStream stream = await ReceiveWebsocketMessage(cancellationToken))
 					using (JsonDocument document = await JsonDocument.ParseAsync(stream, default(JsonDocumentOptions), cancellationToken))
 					{
 						if (document.RootElement.TryGetProperty("type", out var typeProperty))
@@ -70,21 +83,28 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 								//
 								document.Dispose();
 
+								//
+								// Parse and store the server version info for access by consumers of this class.
+								//
 								stream.Seek(0, System.IO.SeekOrigin.Begin);
-								IVersionMessage versionMessage = await JsonSerializer.DeserializeAsync<IVersionMessage>
+								IIncomingVersionMessage versionMessage = await JsonSerializer.DeserializeAsync<IIncomingVersionMessage>
 									(stream, new JsonSerializerOptions(JsonSerializerDefaults.Web), cancellationToken);
-
 								ServerInfo = new ServerVersionInfo(versionMessage);
 
+								//
+								// Subscribe to server states and event messages
+								//
 								string listeningId = await SendCommandMessageAsync("start_listening", null, cancellationToken);
 								IIncomingMessage result = await ReceiveMessageWithIdAsync(listeningId, cancellationToken);
 
-								//
-								// Attempt to close gracefully because of error and
-								// then throw an exception to complete the task.
-								//
+
 								if (result.Type != IncomingMessageType.Result)
 								{
+									//
+									// Attempt to close gracefully because of error and
+									// then throw an exception to complete the task.
+									//
+
 									HandshakeException exception = new HandshakeException("Expected result message in reply to start_listening command.");
 									await Socket.CloseAsync(
 											WebSocketCloseStatus.InvalidMessageType,
@@ -95,9 +115,10 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 									throw exception;
 								}
 
-								// TODO - Parse Start Listening Message
+								ParseStartListeningResultMessage(result);
 
 								State = SharpZWaveJSConnectionState.Open;
+								ShutdownTokenSource = new CancellationTokenSource();
 
 								// TODO - Start Async task to continue receiving message
 								// TODO - Configure data buffer to send message from stuff
@@ -114,6 +135,49 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 				ResetAllState();
 				throw;
 			}
+		}
+
+		private async Task ReceiveAndDispatchMessages()
+		{
+			CancellationToken token = ShutdownTokenSource.Token;
+
+			while (Socket.State == WebSocketState.Open && !token.IsCancellationRequested)
+			{
+				try
+				{
+					IIncomingMessage message;
+					using (System.IO.MemoryStream stream = await ReceiveWebsocketMessage(ShutdownTokenSource.Token))
+					{
+						JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+						options.Converters.Add(new IncomingMessageConverter());
+						message = await JsonSerializer.DeserializeAsync<IIncomingMessage>(stream, options, token);
+					}
+
+					switch (message.Type)
+					{
+						case IncomingMessageType.Event:
+							//TODO
+							break;
+						case IncomingMessageType.Result:
+							CommandResultEvent resultEvent = new CommandResultEvent((IIncomingResultMessage)message);
+							await EventsBroadcaster.SendAsync(resultEvent);
+							break;
+						case IncomingMessageType.Version:
+							throw new ProtocolException("Version message received after connection handshake completed. This is not allowed.");
+						default:
+							throw new NotImplementedException();
+					}
+				}
+				catch (Exception)
+				{
+					Abort();
+				}
+			}
+		}
+
+		private void ParseStartListeningResultMessage(IIncomingMessage result)
+		{
+			throw new NotImplementedException();
 		}
 
 		private Task<IIncomingMessage> ReceiveMessageWithIdAsync(string listeningId, CancellationToken cancellationToken)
@@ -150,8 +214,11 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			ServerInfo = null;
 			State = SharpZWaveJSConnectionState.Closed;
 			RecycleConnection();
+			ShutdownTokenSource.Cancel();
+
+
 		}
-		public async Task<ICommandResult> SendCommandAsync(string command, object payload, CancellationToken cancellationToken)
+		public async Task<ICommandResultEvent> SendCommandAsync(string command, object payload, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
@@ -161,12 +228,10 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		}
 		public void Abort()
 		{
-			State = SharpZWaveJSConnectionState.Closed;
-			RecycleConnection();
-			ServerInfo = null;
+			ResetAllState();
 		}
 
-		private async Task<System.IO.MemoryStream> ReceiveJsonMessage(CancellationToken cancellationToken)
+		private async Task<System.IO.MemoryStream> ReceiveWebsocketMessage(CancellationToken cancellationToken)
 		{
 			System.IO.MemoryStream stream = new System.IO.MemoryStream();
 			byte[] buffer = new byte[128];

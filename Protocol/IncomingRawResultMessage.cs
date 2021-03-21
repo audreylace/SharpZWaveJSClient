@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 {
-	public interface IRawResultMessage : IIncomingMessage
+	public interface IIncomingResultMessage : IIncomingMessage
 	{
 		bool Success { get; }
 		string ErrorCode { get; }
@@ -13,14 +13,13 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 		string Result { get; }
 	}
 
-	internal class RawResultMessage : IncomingMessageBase, IRawResultMessage
+	internal class IncomingResultMessage : IncomingMessageBase, IIncomingResultMessage
 	{
-		public RawResultMessage()
+		public IncomingResultMessage() : base(IncomingMessageType.Result)
 		{
-			Type = IncomingMessageType.Result;
 		}
 
-		internal RawResultMessage(JsonDocument document) : this()
+		internal IncomingResultMessage(JsonDocument document) : this()
 		{
 			try
 			{

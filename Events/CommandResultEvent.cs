@@ -1,8 +1,8 @@
 using AudreysCloud.Community.SharpZWaveJSClient.Protocol;
 
-namespace AudreysCloud.Community.SharpZWaveJSClient
+namespace AudreysCloud.Community.SharpZWaveJSClient.Events
 {
-	public interface ICommandResult
+	public interface ICommandResultEvent : ISharpZWaveJSClientEvent
 	{
 		bool Success { get; }
 
@@ -11,10 +11,12 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		string JsonResult { get; }
 	}
 
-	internal class CommandResult : ICommandResult
+	internal class CommandResultEvent : SharpZWaveJSClientEventBase, ICommandResultEvent
 	{
-		public CommandResult() { }
-		public CommandResult(RawResultMessage message)
+		public CommandResultEvent() : base(SharpZWaveJSClientEventType.ServerCommandResult)
+		{
+		}
+		public CommandResultEvent(IIncomingResultMessage message) : this()
 		{
 			Success = message.Success;
 			ErrorCode = message.ErrorCode;

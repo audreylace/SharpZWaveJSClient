@@ -1,6 +1,6 @@
 namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 {
-	public interface IVersionMessage : IIncomingMessage
+	public interface IIncomingVersionMessage : IIncomingMessage
 	{
 		int MinSchemaVersion { get; }
 		int MaxSchemaVersion { get; }
@@ -9,11 +9,10 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 		long HomeId { get; }
 	}
 
-	internal class VersionMessage : IncomingMessageBase, IVersionMessage
+	internal class IncomingVersionMessage : IncomingMessageBase, IIncomingVersionMessage
 	{
-		public VersionMessage()
+		public IncomingVersionMessage() : base(IncomingMessageType.Version)
 		{
-			Type = IncomingMessageType.Version;
 		}
 		public int MinSchemaVersion { get; set; }
 		public int MaxSchemaVersion { get; set; }

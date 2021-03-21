@@ -15,6 +15,10 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 
 	internal abstract class IncomingMessageBase : IIncomingMessage
 	{
+		protected IncomingMessageBase(IncomingMessageType type)
+		{
+			Type = type;
+		}
 		[JsonIgnore]
 		public IncomingMessageType Type { get; protected set; }
 	}

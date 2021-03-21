@@ -36,15 +36,15 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 					switch (messageType)
 					{
 						case IncomingMessageType.Event:
-							break;
+							return new IncomingRemoteServerEvent(jsonDocument);
 						case IncomingMessageType.Result:
-							return new RawResultMessage(jsonDocument);
+							return new IncomingResultMessage(jsonDocument);
 						case IncomingMessageType.Version:
 
 							_conversionActive = true;
 							try
 							{
-								return JsonSerializer.Deserialize<VersionMessage>(jsonDocument.RootElement.GetRawText(), options);
+								return JsonSerializer.Deserialize<IncomingVersionMessage>(jsonDocument.RootElement.GetRawText(), options);
 							}
 							finally
 							{

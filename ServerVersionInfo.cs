@@ -13,7 +13,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	internal class ServerVersionInfo : IServerVersionInfo
 	{
 		public ServerVersionInfo() { }
-		public ServerVersionInfo(IVersionMessage message)
+		public ServerVersionInfo(IIncomingVersionMessage message)
 		{
 			DriverVersion = message.DriverVersion;
 			ServerVersion = message.ServerVersion;
