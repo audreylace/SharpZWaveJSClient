@@ -8,8 +8,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Events
 	public enum SharpZWaveJSClientEventType
 	{
 		RemoteServerEvent,
-		ServerCommandResult,
-		ConnectionStateChange
+		ServerCommandResult
 	}
 
 	public abstract class SharpZWaveJSClientEventBase : ISharpZWaveJSClientEvent
