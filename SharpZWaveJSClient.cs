@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using AudreysCloud.Community.SharpZWaveJSClient.Exceptions;
 using AudreysCloud.Community.SharpZWaveJSClient.Protocol;
-using AudreysCloud.Community.SharpZWaveJSClient.Events;
+
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
@@ -23,7 +23,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	public sealed class SharpZWaveJSClient
 	{
 
-		private const int MaxSchemaVersion = 3;
 		#region Class State Variables
 
 		#region Private Class State Variables
@@ -38,6 +37,8 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		public List<RemoteServerEventParserBase> RemoteServerEventConverters { get; private set; }
 		public int MaxMessageSize { get; set; }
 		public IServerVersionInfo ServerInfo { get; private set; }
+
+		public int CurrentSchemaVersion { get; private set; }
 
 		#endregion
 
@@ -67,34 +68,46 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			{
 				await Socket.ConnectAsync(uri, cancellationToken);
 				cancellationToken.ThrowIfCancellationRequested();
+				IIncomingVersionMessage versionInfo;
 
 				using (System.IO.MemoryStream stream = await ReceiveWebsocketMessageAsync(cancellationToken))
-				using (JsonDocument document = await JsonDocument.ParseAsync(stream, default(JsonDocumentOptions), cancellationToken))
 				{
-					if (document.RootElement.TryGetProperty("type", out var typeProperty))
+					IIncomingMessage message = await ParseMessage(stream, cancellationToken);
+					if (message.Type != IncomingMessageType.Version)
 					{
-						string typeValue = typeProperty.GetString();
-						if (typeValue != "version")
-						{
-							new HandshakeException("Expected first message to be the version message from the remote server");
-						}
-						//
-						// Free the document since we don't need it now
-						//
-						document.Dispose();
+						throw new HandshakeException("Expected first message to be the version message from the remote server");
+					}
+					versionInfo = (IIncomingVersionMessage)message;
+				}
 
-						//
-						// Parse and store the server version info for access by consumers of this class.
-						//
-						stream.Seek(0, System.IO.SeekOrigin.Begin);
-						IIncomingVersionMessage versionMessage = await JsonSerializer.DeserializeAsync<IIncomingVersionMessage>
-							(stream, new JsonSerializerOptions(JsonSerializerDefaults.Web), cancellationToken);
-						ServerInfo = new ServerVersionInfo(versionMessage);
+				int versionToUse = SelectSchemaVersion(versionInfo);
 
-						State = SharpZWaveJSConnectionState.Open;
-						ShutdownTokenSource = new CancellationTokenSource();
+				SetApiSchemaCommand setApiSchemaCommand = new SetApiSchemaCommand(versionToUse);
+				await SendMessageAsync(setApiSchemaCommand, cancellationToken);
+
+				using (System.IO.MemoryStream stream = await ReceiveWebsocketMessageAsync(cancellationToken))
+				{
+					IIncomingMessage message = await ParseMessage(stream, cancellationToken);
+					if (message.Type != IncomingMessageType.Result)
+					{
+						throw new HandshakeException("Expected message sent back from command to be result reply message");
+					}
+
+					IIncomingResultMessage resultMessage = (IIncomingResultMessage)message;
+					if (resultMessage.MessageId != setApiSchemaCommand.MessageId)
+					{
+						throw new HandshakeException("Expected message sent back from command to be result reply message for initial set api schema message.");
+					}
+
+					if (!resultMessage.Success)
+					{
+						throw new HandshakeException("Failed to negotiate API schema version.");
 					}
 				}
+
+				ServerInfo = new ServerVersionInfo(versionInfo, versionToUse);
+				State = SharpZWaveJSConnectionState.Open;
+				ShutdownTokenSource = new CancellationTokenSource();
 			}
 			catch (Exception)
 			{
@@ -163,7 +176,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			ShutdownTokenSource.Cancel();
 		}
 
-		public async Task<ISharpZWaveJSClientEvent> ReceiveMessageAsync(CancellationToken cancellationToken)
+		public async Task<IIncomingMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
 		{
 			ThrowIfStateNotOpen();
 
@@ -176,7 +189,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			}
 		}
 
-		private async Task<ISharpZWaveJSClientEvent> ParseMessage(System.IO.MemoryStream stream, CancellationToken token)
+		private async Task<IIncomingMessage> ParseMessage(System.IO.MemoryStream stream, CancellationToken token)
 		{
 			try
 			{
@@ -189,8 +202,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 				switch (message.Type)
 				{
 					case IncomingMessageType.Event:
-
-						RemoteServerEventBase serverEvent = null;
 						IIncomingRemoteServerEvent serverEventMessage = (IIncomingRemoteServerEvent)message;
 						foreach (RemoteServerEventParserBase parser in RemoteServerEventConverters)
 						{
@@ -198,8 +209,8 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 							{
 								if (parser.CanParse(serverEventMessage))
 								{
-									serverEvent = parser.Parse(serverEventMessage);
-									break;
+									IIncomingRemoteServerEvent parsedMessage = parser.Parse(serverEventMessage);
+									return parsedMessage;
 								}
 							}
 							catch (JsonException)
@@ -208,16 +219,15 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 							}
 						}
 
-						if (serverEvent == null)
-						{
-							serverEvent = new UnparsedServerEvent(serverEventMessage);
-						}
-
-						return serverEvent;
+						return serverEventMessage;
 					case IncomingMessageType.Result:
-						return new CommandResultEvent((IIncomingResultMessage)message);
+						return message;
 					case IncomingMessageType.Version:
-						throw new ProtocolException("Version message received after connection handshake completed. This is not allowed.");
+						if (State != SharpZWaveJSConnectionState.Connecting)
+						{
+							throw new ProtocolException("Version message received after connection handshake completed. This is not allowed.");
+						}
+						return message;
 					default:
 						throw new NotImplementedException();
 				}
@@ -229,6 +239,15 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			}
 		}
 
+		private int SelectSchemaVersion(IIncomingVersionMessage message)
+		{
+			if (message.MinSchemaVersion > 3)
+			{
+				throw new HandshakeException("Remote server miniumium schema level exceeds the level supported by this implementation");
+			}
+
+			return Math.Min(message.MinSchemaVersion, 3);
+		}
 		private async Task SendMessageAsync(object message, CancellationToken cancellationToken)
 		{
 			await SendSemaphore.WaitAsync(cancellationToken);

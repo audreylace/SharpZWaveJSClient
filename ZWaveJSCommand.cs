@@ -26,6 +26,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			Command = command;
 		}
 		public string MessageId { get; set; }
-		public string Command { get; set; }
+		public string Command { get; protected set; }
 	}
 }

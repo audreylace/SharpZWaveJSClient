@@ -10,6 +10,12 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 	}
 
 
+	public abstract class RemoteServerEventParserBase
+	{
+		public abstract bool CanParse(IIncomingRemoteServerEvent serverEvent);
+		public abstract IIncomingRemoteServerEvent Parse(IIncomingRemoteServerEvent serverEvent);
+	}
+
 	public interface IIncomingRemoteServerEvent : IIncomingMessage
 	{
 		string EventName { get; }
