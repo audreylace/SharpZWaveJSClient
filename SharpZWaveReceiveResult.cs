@@ -1,0 +1,2 @@
+namespace AudreysCloud.Community.SharpZWaveJSClient
+{ }
