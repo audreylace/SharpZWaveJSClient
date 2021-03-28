@@ -33,7 +33,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		#region Private Class State Variables
 		private SemaphoreSlim SendSemaphore { get; set; }
 		private SemaphoreSlim ReceiveSemaphore { get; set; }
-		public ClientWebSocket Socket { get; private set; }
 		private CancellationTokenSource ShutdownTokenSource { get; set; }
 		#endregion
 
@@ -44,7 +43,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		public IServerVersionInfo ServerInfo { get; private set; }
 		public int CurrentSchemaVersion { get; private set; }
 		public Exception Error { get; private set; }
-
+		public ClientWebSocket Socket { get; private set; }
 		#endregion
 
 		#endregion
@@ -63,7 +62,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		}
 
 		#region Public API
-
 
 		public async Task ConnectUsingSocketAsync(ClientWebSocket socket, CancellationToken cancellationToken)
 		{
@@ -85,6 +83,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 				throw;
 			}
 		}
+
 		public async Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
 		{
 			ThrowIfStateNotClosed();
@@ -110,21 +109,18 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			State = SharpZWaveJSConnectionState.Hijacked;
 			Abort();
 			return Socket;
-
 		}
+
 		public async Task SendCommandAsync(IZWaveJSCommand command, CancellationToken cancellationToken)
 		{
 			ThrowIfStateNotOpen();
 
 			CancellationToken token = GetJoinedToken(cancellationToken).Token;
 			await SendMessageAsync(command, token);
-
 		}
 
 		public async Task CloseAsync(CancellationToken cancellationToken)
 		{
-			//ThrowIfStateNotOpen();
-
 			if (State == SharpZWaveJSConnectionState.Closed)
 			{
 				return;
@@ -152,15 +148,53 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			ShutdownTokenSource.Cancel();
 		}
 
+		public async Task<ISharpZWaveJSClientReceiveResult> ReceiveMessageAsync(CancellationToken cancellationToken)
+		{
+
+			if (State != SharpZWaveJSConnectionState.Open)
+			{
+				throw new InvalidOperationException("This operation can only be performed when connection is open");
+			}
+
+			if (Socket.State == WebSocketState.Closed || Socket.State == WebSocketState.CloseReceived)
+			{
+				State = SharpZWaveJSConnectionState.Closing;
+				return new ReceiveResultConnectionClosed(Socket.CloseStatus, Socket.CloseStatusDescription);
+			}
+
+			CancellationToken token = GetJoinedToken(cancellationToken).Token;
+
+			using (System.IO.MemoryStream stream = await ReceiveWebsocketMessageAsync(token))
+			{
+
+				if (Socket.State == WebSocketState.Closed || Socket.State == WebSocketState.CloseReceived)
+				{
+					State = SharpZWaveJSConnectionState.Closing;
+					return new ReceiveResultConnectionClosed(Socket.CloseStatus, Socket.CloseStatusDescription);
+				}
+
+				try
+				{
+					IIncomingMessage message = await ParseMessage(stream, cancellationToken);
+					return new ReceiveResultMessage(message);
+				}
+				catch (JsonException)
+				{
+					stream.Seek(0, System.IO.SeekOrigin.Begin);
+					StreamReader reader = new StreamReader(stream);
+					string text = reader.ReadToEnd();
+					return new ReceiveResultParseFailure(text);
+				}
+			}
+		}
+		#endregion Public API
+
 		private void Abort(Exception ex)
 		{
 			Abort();
 			State = SharpZWaveJSConnectionState.Error;
 			Error = ex;
 		}
-
-		#endregion Public API
-
 
 		private async Task<ServerVersionInfo> NegotiateConnection(CancellationToken cancellationToken)
 		{
@@ -209,9 +243,9 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			State = SharpZWaveJSConnectionState.Open;
 			ShutdownTokenSource = new CancellationTokenSource();
 		}
+
 		private void ThrowIfStateNotOpen()
 		{
-
 			if (State != SharpZWaveJSConnectionState.Open)
 			{
 				throw new InvalidOperationException("This operation can only be performed when connection is open");
@@ -227,8 +261,8 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			{
 				throw new InvalidOperationException("Can only call this method when the state of the connection is closed.");
 			}
-
 		}
+
 		private void ThrowIfWebSocketNotReady()
 		{
 			if (Socket.State != WebSocketState.Open)
@@ -240,48 +274,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		private CancellationTokenSource GetJoinedToken(CancellationToken cancellationToken)
 		{
 			return CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ShutdownTokenSource.Token);
-		}
-
-
-		public async Task<ISharpZWaveJSClientReceiveResult> ReceiveMessageAsync(CancellationToken cancellationToken)
-		{
-
-			if (State != SharpZWaveJSConnectionState.Open)
-			{
-				throw new InvalidOperationException("This operation can only be performed when connection is open");
-			}
-
-			if (Socket.State == WebSocketState.Closed || Socket.State == WebSocketState.CloseReceived)
-			{
-				State = SharpZWaveJSConnectionState.Closing;
-				return new ReceiveResultConnectionClosed(Socket.CloseStatus, Socket.CloseStatusDescription);
-			}
-
-			CancellationTokenSource tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ShutdownTokenSource.Token);
-			CancellationToken token = tokenSource.Token;
-
-			using (System.IO.MemoryStream stream = await ReceiveWebsocketMessageAsync(token))
-			{
-
-				if (Socket.State == WebSocketState.Closed || Socket.State == WebSocketState.CloseReceived)
-				{
-					State = SharpZWaveJSConnectionState.Closing;
-					return new ReceiveResultConnectionClosed(Socket.CloseStatus, Socket.CloseStatusDescription);
-				}
-
-				try
-				{
-					IIncomingMessage message = await ParseMessage(stream, cancellationToken);
-					return new ReceiveResultMessage(message);
-				}
-				catch (JsonException)
-				{
-					stream.Seek(0, System.IO.SeekOrigin.Begin);
-					StreamReader reader = new StreamReader(stream);
-					string text = reader.ReadToEnd();
-					return new ReceiveResultParseFailure(text);
-				}
-			}
 		}
 
 		private async Task<IIncomingMessage> ParseMessage(System.IO.MemoryStream stream, CancellationToken token)
@@ -334,6 +326,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 			return Math.Min(message.MinSchemaVersion, 3);
 		}
+
 		private async Task SendMessageAsync(object message, CancellationToken cancellationToken)
 		{
 			await SendSemaphore.WaitAsync(cancellationToken);
