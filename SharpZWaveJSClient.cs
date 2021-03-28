@@ -25,50 +25,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		Hijacked
 	}
 
-	public interface ISharpZWaveJSClientReceiveResult
-	{
-		bool Success { get; }
-		bool IsClosing { get; }
-		bool IsMessageParseError { get; }
-		string FailedMessageJson { get; }
-		IIncomingMessage Message { get; }
-	}
-
-	internal class SharpZWaveJSClientReceiveResult : ISharpZWaveJSClientReceiveResult
-	{
-
-		public SharpZWaveJSClientReceiveResult(IIncomingMessage message)
-		{
-			Success = true;
-			Message = message;
-		}
-
-		public SharpZWaveJSClientReceiveResult(string failedMessage)
-		{
-			Success = false;
-			IsMessageParseError = true;
-			FailedMessageJson = failedMessage;
-		}
-
-		public SharpZWaveJSClientReceiveResult()
-		{
-			Success = false;
-			IsClosing = true;
-		}
-
-		public bool Success { get; private set; }
-
-		public bool IsClosing { get; private set; }
-
-		public IIncomingMessage Message { get; private set; }
-
-		public bool IsMessageParseError { get; private set; }
-
-		public string FailedMessageJson { get; private set; }
-	}
-
-
-
 	public sealed class SharpZWaveJSClient
 	{
 
@@ -77,7 +33,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		#region Private Class State Variables
 		private SemaphoreSlim SendSemaphore { get; set; }
 		private SemaphoreSlim ReceiveSemaphore { get; set; }
-		private ClientWebSocket Socket { get; set; }
+		public ClientWebSocket Socket { get; private set; }
 		private CancellationTokenSource ShutdownTokenSource { get; set; }
 		#endregion
 
@@ -169,9 +125,13 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		{
 			//ThrowIfStateNotOpen();
 
+			if (State == SharpZWaveJSConnectionState.Closed)
+			{
+				return;
+			}
+
 			State = SharpZWaveJSConnectionState.Closing;
 			ShutdownTokenSource.Cancel();
-
 			await Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Close requested", cancellationToken);
 
 			if (Socket.State != WebSocketState.Closed)
@@ -285,84 +245,83 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		public async Task<ISharpZWaveJSClientReceiveResult> ReceiveMessageAsync(CancellationToken cancellationToken)
 		{
-			ThrowIfStateNotOpen();
+
+			if (State != SharpZWaveJSConnectionState.Open)
+			{
+				throw new InvalidOperationException("This operation can only be performed when connection is open");
+			}
+
+			if (Socket.State == WebSocketState.Closed || Socket.State == WebSocketState.CloseReceived)
+			{
+				State = SharpZWaveJSConnectionState.Closing;
+				return new ReceiveResultConnectionClosed(Socket.CloseStatus, Socket.CloseStatusDescription);
+			}
 
 			CancellationTokenSource tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ShutdownTokenSource.Token);
 			CancellationToken token = tokenSource.Token;
 
 			using (System.IO.MemoryStream stream = await ReceiveWebsocketMessageAsync(token))
 			{
-				if (State == SharpZWaveJSConnectionState.Closing || State == SharpZWaveJSConnectionState.Closing)
+
+				if (Socket.State == WebSocketState.Closed || Socket.State == WebSocketState.CloseReceived)
 				{
-					return new SharpZWaveJSClientReceiveResult();
+					State = SharpZWaveJSConnectionState.Closing;
+					return new ReceiveResultConnectionClosed(Socket.CloseStatus, Socket.CloseStatusDescription);
 				}
 
 				try
 				{
 					IIncomingMessage message = await ParseMessage(stream, cancellationToken);
-					return new SharpZWaveJSClientReceiveResult(message);
+					return new ReceiveResultMessage(message);
 				}
 				catch (JsonException)
 				{
 					stream.Seek(0, System.IO.SeekOrigin.Begin);
 					StreamReader reader = new StreamReader(stream);
 					string text = reader.ReadToEnd();
-					return new SharpZWaveJSClientReceiveResult(text);
+					return new ReceiveResultParseFailure(text);
 				}
 			}
 		}
 
 		private async Task<IIncomingMessage> ParseMessage(System.IO.MemoryStream stream, CancellationToken token)
 		{
-			try
+			IIncomingMessage message;
+			JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+			options.Converters.Add(new IncomingMessageConverter());
+			message = await JsonSerializer.DeserializeAsync<IIncomingMessage>(stream, options, token);
+
+			switch (message.Type)
 			{
-				IIncomingMessage message;
-				JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-				options.Converters.Add(new IncomingMessageConverter());
-				message = await JsonSerializer.DeserializeAsync<IIncomingMessage>(stream, options, token);
-
-
-				switch (message.Type)
-				{
-					case IncomingMessageType.Event:
-						IIncomingRemoteServerEvent serverEventMessage = (IIncomingRemoteServerEvent)message;
-						foreach (RemoteServerEventParserBase parser in RemoteServerEventConverters)
+				case IncomingMessageType.Event:
+					IIncomingRemoteServerEvent serverEventMessage = (IIncomingRemoteServerEvent)message;
+					foreach (RemoteServerEventParserBase parser in RemoteServerEventConverters)
+					{
+						try
 						{
-							try
+							if (parser.CanParse(serverEventMessage))
 							{
-								if (parser.CanParse(serverEventMessage))
-								{
-									IIncomingRemoteServerEvent parsedMessage = parser.Parse(serverEventMessage);
-									return parsedMessage;
-								}
-							}
-							catch (JsonException)
-							{
-								// Go to next one...
+								IIncomingRemoteServerEvent parsedMessage = parser.Parse(serverEventMessage);
+								return parsedMessage;
 							}
 						}
-
-						return serverEventMessage;
-					case IncomingMessageType.Result:
-						return message;
-					case IncomingMessageType.Version:
-						if (State != SharpZWaveJSConnectionState.Connecting)
+						catch (JsonException)
 						{
-							throw new ProtocolException("Version message received after connection handshake completed. This is not allowed.");
+							// Go to next one...
 						}
-						return message;
-					default:
-						throw new NotImplementedException();
-				}
-			}
-			catch (JsonException)
-			{
-				throw;
-			}
-			catch (Exception ex)
-			{
-				Abort(ex);
-				throw;
+					}
+
+					return serverEventMessage;
+				case IncomingMessageType.Result:
+					return message;
+				case IncomingMessageType.Version:
+					if (State != SharpZWaveJSConnectionState.Connecting)
+					{
+						throw new ProtocolException("Version message received after connection handshake completed. This is not allowed.");
+					}
+					return message;
+				default:
+					throw new NotImplementedException();
 			}
 		}
 
@@ -406,8 +365,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 					if (result.MessageType == WebSocketMessageType.Close)
 					{
-						await Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Close requested", cancellationToken);
-						State = SharpZWaveJSConnectionState.Closed;
 						return stream;
 					}
 					else if (result.MessageType == WebSocketMessageType.Binary)

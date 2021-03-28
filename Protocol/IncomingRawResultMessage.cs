@@ -10,7 +10,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 		string ErrorCode { get; }
 
 		string MessageId { get; }
-		string Result { get; }
+		string ResultJson { get; }
 	}
 
 	internal class IncomingResultMessage : IncomingMessageBase, IIncomingResultMessage
@@ -32,7 +32,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 				if (Success)
 				{
 					JsonElement result = document.RootElement.GetProperty("result");
-					Result = result.GetRawText();
+					ResultJson = result.GetRawText();
 				}
 				else
 				{
@@ -51,6 +51,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 
 		public string MessageId { get; private set; }
 
-		public string Result { get; private set; }
+		public string ResultJson { get; private set; }
 	}
 }
