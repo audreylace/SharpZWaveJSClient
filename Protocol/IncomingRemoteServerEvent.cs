@@ -20,7 +20,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 	{
 		string EventName { get; }
 		RemoteServerEventSource Source { get; }
-		string EventJson { get; }
+		JsonElement EventJson { get; }
 	}
 
 	internal class IncomingRemoteServerEvent : IncomingMessageBase, IIncomingRemoteServerEvent
@@ -40,7 +40,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 
 				EventName = EventNameNode.GetString();
 				Source = Enum.Parse<RemoteServerEventSource>(SourceNode.GetString(), true);
-				EventJson = EventNode.GetRawText();
+				EventJson = EventNode.Clone();
 
 			}
 			catch (Exception ex)
@@ -54,7 +54,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Protocol
 
 		public RemoteServerEventSource Source { get; set; }
 
-		public string EventJson { get; set; }
+		public JsonElement EventJson { get; set; }
 	}
 
 

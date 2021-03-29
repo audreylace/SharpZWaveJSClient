@@ -319,12 +319,19 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		private int SelectSchemaVersion(IIncomingVersionMessage message)
 		{
-			if (message.MinSchemaVersion > 3)
+			// Only support schema level 2 at the moment
+			if (message.MinSchemaVersion > 2)
 			{
 				throw new ProtocolException("Remote server miniumium schema level exceeds the level supported by this implementation");
 			}
 
-			return Math.Min(message.MinSchemaVersion, 2);
+			if (message.MaxSchemaVersion < 2)
+			{
+				throw new ProtocolException("Remote server max schema level is lower then the level supported by this implementation");
+			}
+
+			return 2;
+
 		}
 
 		private async Task SendMessageAsync(object message, CancellationToken cancellationToken)

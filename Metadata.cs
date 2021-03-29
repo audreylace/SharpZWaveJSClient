@@ -18,24 +18,25 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		Color
 	}
 
-
-	public interface IValueMetadataAny
+	public interface IValueMetadata
 	{
 		NodeValueStoreValueType Type { get; }
 		object Default { get; }
-
 		bool Readable { get; }
-
 		bool Writeable { get; }
-
 		string Description { get; }
-
 		string Label { get; }
-
 		[JsonPropertyName("ccSpecific")]
-		[JsonConverter(typeof(SaveArrayOrObjectAsJsonConverter))]
-		string CCSpecific { get; }
+		object CCSpecific { get; }
+		long MinLength { get; }
+		long MaxLength { get; }
+		long Min { get; }
+		long Max { get; }
+		long Steps { get; }
+		string Unit { get; }
+		Dictionary<long, string> States { get; }
 	}
+
 	public enum DurationUnit
 	{
 		Seconds,
@@ -43,40 +44,5 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		Unknown,
 		Default
 	}
-	public interface IValueDurationMetadata : IValueMetadataAny
-	{
-		new IDurationType Default { get; }
-	}
 
-	public interface IValueBufferMetadata : IValueMetadataAny
-	{
-		long MinLength { get; }
-		long MaxLength { get; }
-	}
-
-	public interface IValueStringMetadata : IValueMetadataAny
-	{
-		long MinLength { get; }
-		long MaxLength { get; }
-		new string Default { get; }
-	}
-
-	public interface IBoolMetadata : IValueMetadataAny
-	{
-		new bool Default { get; }
-	}
-
-
-	public interface INumericMetadata : IValueMetadataAny
-	{
-		long Min { get; }
-		long Max { get; }
-		long Steps { get; }
-
-		new long Default { get; }
-
-		string Unit { get; }
-
-		Dictionary<long, string> States { get; }
-	}
 }

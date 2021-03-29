@@ -5,9 +5,11 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 {
 	public interface INodeDeviceClass
 	{
-		KeyValuePair<long, string> Basic { get; }
-		KeyValuePair<long, string> Generic { get; }
-		KeyValuePair<long, string> Specific { get; }
+		string Basic { get; }
+		string Generic { get; }
+		string Specific { get; }
+
+		//TODO - Custom converter needed!
 		CommandClasses[] MandatorySupportedCCs { get; }
 		CommandClasses[] MandatoryControlledCCs { get; }
 	}

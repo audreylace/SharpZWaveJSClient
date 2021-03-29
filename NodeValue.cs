@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using AudreysCloud.Community.SharpZWaveJSClient.Converters;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
@@ -6,23 +7,12 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	{
 		long Endpoint { get; }
 		CommandClasses CommandClass { get; }
-		string CommandClassName { get; }
 
-		[JsonPropertyName("property")]
-		[JsonConverter(typeof(TryConvertToStringConverter))]
-		string PropertyString { get; }
+		[JsonConverter(typeof(StringOrNumberOrBoolConverter))]
+		IStringOrNumberOrBool Property { get; }
 
-		[JsonPropertyName("property")]
-		[JsonConverter(typeof(TryConvertToNumberConverter))]
-		long PropertyNumber { get; }
-
-		[JsonPropertyName("propertyKey")]
-		[JsonConverter(typeof(TryConvertToStringConverter))]
-		string PropertyKeyString { get; }
-
-		[JsonPropertyName("propertyKey")]
-		[JsonConverter(typeof(TryConvertToNumberConverter))]
-		long PropertyKeyNumber { get; }
+		[JsonConverter(typeof(StringOrNumberOrBoolConverter))]
+		IStringOrNumberOrBool PropertyKey { get; }
 
 		string PropertyName { get; }
 
@@ -31,11 +21,9 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		[JsonPropertyName("ccVersion")]
 		long CCVersion { get; }
 
-		//TODO - Converter
-		IValueMetadataAny Metadata { get; }
+		IValueMetadata Metadata { get; }
 
 		NodeValueStoreValueType ValueType { get; }
-
 		object Value { get; }
 	}
 
