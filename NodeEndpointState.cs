@@ -8,11 +8,10 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		long NodeId { get; }
 		long Index { get; }
 		string InstallerIcon { get; }
-
 		string UserIcon { get; }
 
-		[SchemaVersion(3)]
-		INodeDeviceClass DeviceClass { get; }
+		//[SchemaVersion(3)]
+		//INodeDeviceClass DeviceClass { get; }
 	}
 
 }

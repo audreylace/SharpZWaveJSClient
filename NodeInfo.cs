@@ -5,35 +5,8 @@ using System.Text.Json.Serialization;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-
-	public interface ICommandClass
-	{
-		CommandClasses Id { get; }
-		long Version { get; }
-
-		bool IsSecure { get; }
-
-	}
-
-	public enum ZWavePlusNodeType
-	{
-		Node = 0,
-		IPGateway = 2
-	}
-
-	public enum ZWavePlusRoleType
-	{
-		CentralStaticController = 0,
-		SubStaticController = 1,
-		PortableController = 2,
-		PortableReportingController = 3,
-		PortableSlave = 4,
-		AlwaysOnSlave = 5,
-		SleepingReportingSlave = 6,
-		SleepingListeningSlave = 7
-	}
-
-	public interface INodeInfo
+	//Version 1.1.1 of the node info, will be deleted once we have version 1.1.3 to test against. 
+	public interface INodeInfo111
 	{
 		long NodeId { get; }
 
@@ -45,15 +18,22 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		NodeStatus Status { get; }
 
 		bool Ready { get; }
+
+		//todo - rename to supportsBeaming
 		bool IsBeaming { get; }
 
+
+		//todo - being renamed to zwavePlusNodeType
 		ZWavePlusNodeType NodeType { get; }
+
+		//todo - being renamed to zwavePlusRoleType
 		ZWavePlusRoleType RoleType { get; }
 
 		bool IsListening { get; }
 
 		bool IsRouting { get; }
 
+		//todo - The supportsSecurity property was split off from the isSecure property because they have a different meaning.
 		bool IsSecure { get; }
 
 		long ManufacturerId { get; }
@@ -85,15 +65,21 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		INodeValue[] Values { get; }
 
+		//TODO - this is being changed to a enum type
 		bool IsFrequentListening { get; }
 
+		//todo - this is being renamed to protocolVersion
 		long Version { get; }
 
+		//TODO - this is being changed to maxDataRate
 		long MaxBaudRate { get; }
 
-		INodeDeviceClass DeviceClass { get; }
+		// Broken in version 1.1.1. Uncomment out when upgrading to new version
+		//INodeDeviceClass DeviceClass { get; }
 
 		ICommandClass[] CommandClasses { get; }
+
+		//todo - add supportedDataRates
 
 	}
 

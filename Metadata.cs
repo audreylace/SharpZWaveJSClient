@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
 
-	public enum NodeValueStoreValueType
+	public enum NodeValueStoreValueType //todo custom serializer
 	{
 		Any,
 		Numeric,
