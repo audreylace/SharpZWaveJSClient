@@ -9,7 +9,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		string Generic { get; }
 		string Specific { get; }
 
-		//TODO - Custom converter needed!
+
 		CommandClasses[] MandatorySupportedCCs { get; }
 		CommandClasses[] MandatoryControlledCCs { get; }
 	}
