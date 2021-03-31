@@ -21,16 +21,39 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		[JsonPropertyName("ccVersion")]
 		long CCVersion { get; }
 
-		IValueMetadata Metadata { get; }
+		IZWaveNodeValueMetadata Metadata { get; }
 
-		NodeValueStoreValueType ValueType { get; }
+		ZWaveNodeValueStoreValueType ValueType { get; }
 		object Value { get; }
 	}
 
-	public interface IZWaveValueDurationType
+
+	public class ZWaveNodeValue : IZWaveNodeValue
 	{
-		DurationUnit Unit { get; }
-		long Value { get; }
+		public long Endpoint { get; set; }
+
+		public ZWaveCommandClasses CommandClass { get; set; }
+
+		[JsonConverter(typeof(StringOrNumberOrBoolConverter))]
+		public IStringOrNumberOrBool Property { get; set; }
+
+		[JsonConverter(typeof(StringOrNumberOrBoolConverter))]
+		public IStringOrNumberOrBool PropertyKey { get; set; }
+
+		public string PropertyName { get; set; }
+
+		public string PropertyKeyName { get; set; }
+
+		[JsonPropertyName("ccVersion")]
+		public long CCVersion { get; set; }
+
+		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveNodeValueMetadata>))]
+		public IZWaveNodeValueMetadata Metadata { get; set; }
+
+		public ZWaveNodeValueStoreValueType ValueType { get; set; }
+
+		public object Value { get; set; }
 	}
+
 
 }

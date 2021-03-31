@@ -1,6 +1,6 @@
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-	public enum IZWaveNodeDataRate
+	public enum ZWaveNodeDataRate
 	{
 		Rate9600 = 9600,
 		Rate40000 = 40000,

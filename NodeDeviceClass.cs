@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
@@ -12,5 +13,23 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		ZWaveCommandClasses[] MandatorySupportedCCs { get; }
 		ZWaveCommandClasses[] MandatoryControlledCCs { get; }
+	}
+
+	public class ZWaveNodeDeviceClass : IZWaveNodeDeviceClass
+	{
+
+		public string Basic { get; set; }
+
+
+		public string Generic { get; set; }
+
+
+		public string Specific { get; set; }
+
+
+		public ZWaveCommandClasses[] MandatorySupportedCCs { get; set; }
+
+
+		public ZWaveCommandClasses[] MandatoryControlledCCs { get; set; }
 	}
 }

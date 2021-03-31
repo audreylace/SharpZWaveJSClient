@@ -14,7 +14,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		string InstallerIcon { get; }
 		string UserIcon { get; }
 
-		IZWaveNodeStatus Status { get; }
+		ZWaveNodeStatus Status { get; }
 
 		bool Ready { get; }
 
@@ -23,10 +23,10 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 
 		[SchemaVersion(3)]
-		ZWavePlusNodeType ZwavePlusNodeType { get; }
+		ZWavePlusNodeType ZWavePlusNodeType { get; }
 
 		[SchemaVersion(3)]
-		ZWavePlusNodeRoleType zwavePlusRoleType { get; }
+		ZWavePlusNodeRoleType ZWavePlusRoleType { get; }
 
 		bool IsListening { get; }
 
@@ -42,7 +42,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		string FirmwareVersion { get; }
 
-		long ZwavePlusVersion { get; }
+		long ZWavePlusVersion { get; }
 		string Name { get; }
 		string Location { get; }
 		string Label { get; }
@@ -54,7 +54,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		long InterviewAttempts { get; }
 
-		IZWaveNodeInterviewStage InterviewStage { get; }
+		ZWaveNodeInterviewStage InterviewStage { get; }
 
 		IZWaveNodeEndpointState[] EndPoints { get; }
 
@@ -74,7 +74,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		[SchemaVersion(3)]
 
-		IZWaveNodeDataRate SupportedDataRates { get; }
+		ZWaveNodeDataRate SupportedDataRates { get; }
 		IZWaveNodeDeviceClass DeviceClass { get; }
 
 		IZWaveCommandClass[] CommandClasses { get; }
@@ -84,158 +84,125 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 	}
 
-	public class NodeInfo : IZWaveNodeInfo
+	public class ZWaveNodeInfo : IZWaveNodeInfo
 	{
-		public long NodeId => throw new NotImplementedException();
 
-		public long Index => throw new NotImplementedException();
+		public long NodeId { get; set; }
 
-		public string InstallerIcon => throw new NotImplementedException();
+		public long Index { get; set; }
 
-		public string UserIcon => throw new NotImplementedException();
+		public string InstallerIcon { get; set; }
 
-		public IZWaveNodeStatus Status => throw new NotImplementedException();
+		public string UserIcon { get; set; }
 
-		public bool Ready => throw new NotImplementedException();
+		public ZWaveNodeStatus Status { get; set; }
 
-		public bool SupportsBeaming => throw new NotImplementedException();
+		public bool Ready { get; set; }
 
-		public ZWavePlusNodeType ZwavePlusNodeType => throw new NotImplementedException();
+		private bool IsBeaming { set { SupportsBeaming = value; } }
 
-		public ZWavePlusNodeRoleType zwavePlusRoleType => throw new NotImplementedException();
+		public bool SupportsBeaming { get; set; }
 
-		public bool IsListening => throw new NotImplementedException();
+		[JsonPropertyName("nodeType")]
+		[ObsoleteAttribute("This property has been renamed to ZWavePlusNodeType as of Schema 3. New code should use ZWavePlusNodeType instead as this property is scheduled to be removed in a future version.")]
+		public ZWavePlusNodeType NodeType
+		{
+			get { return ZWavePlusNodeType; }
+			set { ZWavePlusNodeType = value; }
+		}
 
-		public bool IsRouting => throw new NotImplementedException();
+		[JsonPropertyName("zwavePlusNodeType")]
+		public ZWavePlusNodeType ZWavePlusNodeType { get; set; }
 
-		public bool IsSecure => throw new NotImplementedException();
+		[JsonPropertyName("roleType")]
+		[ObsoleteAttribute("This property has been renamed to ZWavePlusRoleType as of Schema 3. New code should use ZWavePlusRoleType instead as this property is scheduled to be removed in a future version.")]
+		public ZWavePlusNodeRoleType RoleType
+		{
+			get { return ZWavePlusRoleType; }
+			set { ZWavePlusRoleType = value; }
+		}
 
-		public long ManufacturerId => throw new NotImplementedException();
+		[JsonPropertyName("zwavePlusRoleType")]
+		public ZWavePlusNodeRoleType ZWavePlusRoleType { get; set; }
 
-		public long ProductId => throw new NotImplementedException();
+		public bool IsListening { get; set; }
 
-		public long ProductType => throw new NotImplementedException();
+		public bool IsRouting { get; set; }
 
-		public string FirmwareVersion => throw new NotImplementedException();
+		public bool IsSecure { get; set; }
 
-		public long ZwavePlusVersion => throw new NotImplementedException();
+		public long ManufacturerId { get; set; }
 
-		public string Name => throw new NotImplementedException();
+		public long ProductId { get; set; }
 
-		public string Location => throw new NotImplementedException();
+		public long ProductType { get; set; }
 
-		public string Label => throw new NotImplementedException();
+		public string FirmwareVersion { get; set; }
 
-		public long[] Neighbors => throw new NotImplementedException();
+		[JsonPropertyName("zwavePlusVersion")]
+		public long ZWavePlusVersion { get; set; }
 
-		public bool EndpointCountIsDynamic => throw new NotImplementedException();
+		public string Name { get; set; }
 
-		public bool EndpointsHaveIdenticalCapabilities => throw new NotImplementedException();
+		public string Location { get; set; }
 
-		public long IndividualEndpointCount => throw new NotImplementedException();
+		public string Label { get; set; }
 
-		public long AggregatedEndpointCount => throw new NotImplementedException();
+		public long[] Neighbors { get; set; }
 
-		public long InterviewAttempts => throw new NotImplementedException();
+		public bool EndpointCountIsDynamic { get; set; }
 
-		public IZWaveNodeInterviewStage InterviewStage => throw new NotImplementedException();
+		public bool EndpointsHaveIdenticalCapabilities { get; set; }
 
-		public IZWaveNodeEndpointState[] EndPoints => throw new NotImplementedException();
+		public long IndividualEndpointCount { get; set; }
 
-		public IZWaveNodeValue[] Values => throw new NotImplementedException();
+		public long AggregatedEndpointCount { get; set; }
 
-		public FLiRS IsFrequentListening => throw new NotImplementedException();
+		public long InterviewAttempts { get; set; }
 
-		public long ProtocolVersion => throw new NotImplementedException();
+		public ZWaveNodeInterviewStage InterviewStage { get; set; }
 
-		public long MaxDataRate => throw new NotImplementedException();
+		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveNodeEndpointState>))]
+		public IZWaveNodeEndpointState[] EndPoints { get; set; }
 
-		public IZWaveNodeDataRate SupportedDataRates => throw new NotImplementedException();
+		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveNodeValue>))]
+		public IZWaveNodeValue[] Values { get; set; }
 
-		public IZWaveNodeDeviceClass DeviceClass => throw new NotImplementedException();
+		[JsonConverter(typeof(FLiRSConverter))]
+		public FLiRS IsFrequentListening { get; set; }
 
-		public IZWaveCommandClass[] CommandClasses => throw new NotImplementedException();
+		[ObsoleteAttribute("This property has been renamed to ProtocolVersion as of Schema 3. New code should use ProtocolVersion instead as this property is scheduled to be removed in a future version.")]
+		[SchemaVersion(0, 2)]
+		public long Version
+		{
+			get { return ProtocolVersion; }
+			set { ProtocolVersion = value; }
+		}
 
-		public bool SupportsSecurity => throw new NotImplementedException();
+		[SchemaVersion(3)]
+		public long ProtocolVersion { get; set; }
+
+		[SchemaVersion(3)]
+		public long MaxDataRate { get; set; }
+
+		[ObsoleteAttribute("This property has been renamed to MaxDataRate as of Schema 3. New code should use MaxDataRate instead as this property is scheduled to be removed in a future version.")]
+		[SchemaVersion(0, 2)]
+		public long MaxBaudRate
+		{
+			get { return MaxDataRate; }
+			set { MaxDataRate = value; }
+		}
+
+		[SchemaVersion(3)]
+		public ZWaveNodeDataRate SupportedDataRates { get; set; }
+
+		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveNodeDeviceClass>))]
+		public IZWaveNodeDeviceClass DeviceClass { get; set; }
+
+		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveCommandClass>))]
+		public IZWaveCommandClass[] CommandClasses { get; set; }
+
+		[SchemaVersion(3)]
+		public bool SupportsSecurity { get; set; }
 	}
-
-	//Version 1.1.1 of the node info, will be deleted once we have version 1.1.3 to test against. 
-	// public interface INodeInfo111
-	// {
-	// 	long NodeId { get; }
-
-	// 	long Index { get; }
-
-	// 	string InstallerIcon { get; }
-	// 	string UserIcon { get; }
-
-	// 	NodeStatus Status { get; }
-
-	// 	bool Ready { get; }
-
-	// 	//todo - rename to supportsBeaming
-	// 	bool IsBeaming { get; }
-
-
-	// 	//todo - being renamed to zwavePlusNodeType
-	// 	ZWavePlusNodeType NodeType { get; }
-
-	// 	//todo - being renamed to zwavePlusRoleType
-	// 	ZWavePlusNodeRoleType RoleType { get; }
-
-	// 	bool IsListening { get; }
-
-	// 	bool IsRouting { get; }
-
-	// 	//todo - The supportsSecurity property was split off from the isSecure property because they have a different meaning.
-	// 	bool IsSecure { get; }
-
-	// 	long ManufacturerId { get; }
-
-	// 	long ProductId { get; }
-
-	// 	long ProductType { get; }
-
-	// 	string FirmwareVersion { get; }
-
-	// 	long ZwavePlusVersion { get; }
-	// 	string Name { get; }
-	// 	string Location { get; }
-	// 	string Label { get; }
-	// 	long[] Neighbors { get; }
-	// 	bool EndpointCountIsDynamic { get; }
-	// 	bool EndpointsHaveIdenticalCapabilities { get; }
-	// 	long IndividualEndpointCount { get; }
-	// 	long AggregatedEndpointCount { get; }
-
-	// 	long InterviewAttempts { get; }
-
-	// 	NodeInterviewStage InterviewStage { get; }
-
-	// 	INodeEndpointState[] EndPoints { get; }
-
-	// 	// Todo - Support Parsing
-	// 	//	object DeviceConfig { get; }
-
-	// 	INodeValue[] Values { get; }
-
-	// 	//TODO - this is being changed to a enum type
-	// 	bool IsFrequentListening { get; }
-
-	// 	//todo - this is being renamed to protocolVersion
-	// 	long Version { get; }
-
-	// 	//TODO - this is being changed to maxDataRate
-	// 	long MaxBaudRate { get; }
-
-	// 	// Broken in version 1.1.1. Uncomment out when upgrading to new version
-	// 	//INodeDeviceClass DeviceClass { get; }
-
-	// 	ICommandClass[] CommandClasses { get; }
-
-	// 	//todo - add supportedDataRates
-
-	// }
-
-
 }

@@ -12,15 +12,15 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Converters
 		string ValueString { get; }
 	}
 
-	internal class StringOrNumberOrBool : IStringOrNumberOrBool
+	public class StringOrNumberOrBool : IStringOrNumberOrBool
 	{
-		public Type Type { get; internal set; }
+		public Type Type { get; set; }
 
-		public bool ValueBool { get; internal set; }
+		public bool ValueBool { get; set; }
 
-		public double ValueNumber { get; internal set; }
+		public double ValueNumber { get; set; }
 
-		public string ValueString { get; internal set; }
+		public string ValueString { get; set; }
 	}
 
 	public class StringOrNumberOrBoolConverter : JsonConverter<IStringOrNumberOrBool>

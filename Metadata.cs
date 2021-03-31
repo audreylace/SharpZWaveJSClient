@@ -1,31 +1,19 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-
-	public enum NodeValueStoreValueType //todo custom serializer
+	public interface IZWaveNodeValueMetadata
 	{
-		Any,
-		Numeric,
-		Boolean,
-		String,
-		Duration,
-		Buffer,
-		BooleanArray,
-		StringArray,
-		NumericArray,
-		Color
-	}
-
-	public interface IValueMetadata
-	{
-		NodeValueStoreValueType Type { get; }
+		ZWaveNodeValueStoreValueType Type { get; }
 		object Default { get; }
 		bool Readable { get; }
 		bool Writeable { get; }
 		string Description { get; }
 		string Label { get; }
+
 		[JsonPropertyName("ccSpecific")]
 		object CCSpecific { get; }
 		long MinLength { get; }
@@ -34,15 +22,42 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		long Max { get; }
 		long Steps { get; }
 		string Unit { get; }
-		Dictionary<long, string> States { get; }
+		IDictionary<long, string> States { get; }
 	}
 
-	public enum DurationUnit
+	public class ZWaveNodeValueMetadata : IZWaveNodeValueMetadata
 	{
-		Seconds,
-		Minutes,
-		Unknown,
-		Default
+
+		public ZWaveNodeValueStoreValueType Type { get; set; }
+
+		public object Default { get; set; }
+
+		public bool Readable { get; set; }
+
+		public bool Writeable { get; set; }
+
+		public string Description { get; set; }
+
+		public string Label { get; set; }
+
+		[JsonPropertyName("ccSpecific")]
+		public object CCSpecific { get; set; }
+
+		public long MinLength { get; set; }
+
+		public long MaxLength { get; set; }
+
+		public long Min { get; set; }
+
+		public long Max { get; set; }
+
+		public long Steps { get; set; }
+
+		public string Unit { get; set; }
+
+		public IDictionary<long, string> States { get; set; }
 	}
+
+
 
 }
