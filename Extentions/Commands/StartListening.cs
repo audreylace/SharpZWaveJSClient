@@ -29,9 +29,9 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Extentions.Commands
 
 	public class StartListeningCommandResult
 	{
-		[JsonConverter(typeof(ImplementInterfaceConverter<IControllerInfo, ControllerInfo>))]
+		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveControllerInfo, ZWaveControllerInfo>))]
 		[JsonInclude]
-		public IControllerInfo Controller { get; private set; }
+		public IZWaveControllerInfo Controller { get; private set; }
 
 		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeInfo[], ZWaveNodeInfo[]>))]
 		[JsonInclude]

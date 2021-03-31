@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-	public interface IControllerInfo
+	public interface IZWaveControllerInfo
 	{
 		string LibraryVersion { get; }
 		ZWaveLibraryTypes Type { get; }
@@ -19,12 +19,12 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		long ManufacturerId { get; }
 		long ProductType { get; }
 		long ProductId { get; }
-		ControllerDataMessageFunctionIDs[] SupportedFunctionTypes { get; }
+		ZWaveControllerDataMessageFunctionIDs[] SupportedFunctionTypes { get; }
 		long SucNodeId { get; }
 		bool SupportsTimers { get; }
 	}
 
-	public class ControllerInfo : IControllerInfo
+	public class ZWaveControllerInfo : IZWaveControllerInfo
 	{
 		public string LibraryVersion { get; set; }
 
@@ -54,7 +54,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		public long ProductId { get; set; }
 
-		public ControllerDataMessageFunctionIDs[] SupportedFunctionTypes { get; set; }
+		public ZWaveControllerDataMessageFunctionIDs[] SupportedFunctionTypes { get; set; }
 
 		public long SucNodeId { get; set; }
 

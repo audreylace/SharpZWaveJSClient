@@ -24,7 +24,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 	// SOFTWARE.
 
-	public enum ControllerDataMessageFunctionIDs
+	public enum ZWaveControllerDataMessageFunctionIDs
 	{
 		GetSerialApiInitData = 0x02,
 
