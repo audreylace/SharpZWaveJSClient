@@ -3,10 +3,10 @@ using AudreysCloud.Community.SharpZWaveJSClient.Converters;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-	public interface INodeValue
+	public interface IZWaveNodeValue
 	{
 		long Endpoint { get; }
-		CommandClasses CommandClass { get; }
+		ZWaveCommandClasses CommandClass { get; }
 
 		[JsonConverter(typeof(StringOrNumberOrBoolConverter))]
 		IStringOrNumberOrBool Property { get; }
@@ -27,7 +27,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		object Value { get; }
 	}
 
-	public interface IDurationType
+	public interface IZWaveValueDurationType
 	{
 		DurationUnit Unit { get; }
 		long Value { get; }

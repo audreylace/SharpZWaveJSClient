@@ -1,8 +1,8 @@
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-	public interface ICommandClass
+	public interface IZWaveCommandClass
 	{
-		CommandClasses Id { get; }
+		ZWaveCommandClasses Id { get; }
 		long Version { get; }
 
 		bool IsSecure { get; }

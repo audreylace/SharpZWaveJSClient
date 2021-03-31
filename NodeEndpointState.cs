@@ -3,7 +3,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 
 
-	public interface INodeEndpointState
+	public interface IZWaveNodeEndpointState
 	{
 		long NodeId { get; }
 		long Index { get; }

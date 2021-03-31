@@ -1,7 +1,7 @@
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
 
-	public enum NodeStatus
+	public enum IZWaveNodeStatus
 	{
 		Unknown = 0,
 		Asleep = 1,

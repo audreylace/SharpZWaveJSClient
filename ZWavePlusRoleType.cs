@@ -1,6 +1,6 @@
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-	public enum ZWavePlusRoleType
+	public enum ZWavePlusNodeRoleType
 	{
 		CentralStaticController = 0,
 		SubStaticController = 1,

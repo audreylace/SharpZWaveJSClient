@@ -24,7 +24,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 	// SOFTWARE.
 
-	public enum CommandClasses
+	public enum ZWaveCommandClasses
 	{
 		AlarmSensor = 156,
 		AlarmSilence = 157,

@@ -23,7 +23,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 	// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 	// SOFTWARE.
-	public enum NodeInterviewStage
+	public enum IZWaveNodeInterviewStage
 	{
 		/** The interview process hasn't started for this node */
 		None = 0,

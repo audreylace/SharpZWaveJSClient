@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-	public interface INodeDeviceClass
+	public interface IZWaveNodeDeviceClass
 	{
 		string Basic { get; }
 		string Generic { get; }
 		string Specific { get; }
 
 
-		CommandClasses[] MandatorySupportedCCs { get; }
-		CommandClasses[] MandatoryControlledCCs { get; }
+		ZWaveCommandClasses[] MandatorySupportedCCs { get; }
+		ZWaveCommandClasses[] MandatoryControlledCCs { get; }
 	}
 }
