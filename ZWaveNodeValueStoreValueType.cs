@@ -11,14 +11,14 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	public enum ZWaveNodeValueStoreValueType
 	{
 		Any,
-		Numeric,
+		Number,
 		Boolean,
 		String,
 		Duration,
 		Buffer,
 		BooleanArray,
 		StringArray,
-		NumericArray,
+		NumberArray,
 		Color
 	}
 
@@ -38,13 +38,13 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 				case "ANY":
 					return ZWaveNodeValueStoreValueType.Any;
 				case "NUMBER":
-					return ZWaveNodeValueStoreValueType.Numeric;
+					return ZWaveNodeValueStoreValueType.Number;
 				case "BOOLEAN":
 					return ZWaveNodeValueStoreValueType.Boolean;
 				case "STRING":
 					return ZWaveNodeValueStoreValueType.String;
 				case "NUMBER[]":
-					return ZWaveNodeValueStoreValueType.NumericArray;
+					return ZWaveNodeValueStoreValueType.NumberArray;
 				case "BOOLEAN[]":
 					return ZWaveNodeValueStoreValueType.BooleanArray;
 				case "STRING[]":
@@ -62,7 +62,43 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		public override void Write(Utf8JsonWriter writer, ZWaveNodeValueStoreValueType value, JsonSerializerOptions options)
 		{
-			throw new NotImplementedException();
+			switch (value)
+			{
+				case ZWaveNodeValueStoreValueType.Any:
+					writer.WriteStringValue("any");
+					break;
+				case ZWaveNodeValueStoreValueType.Number:
+					writer.WriteStringValue("number");
+					break;
+				case ZWaveNodeValueStoreValueType.Boolean:
+					writer.WriteStringValue("boolean");
+					break;
+				case ZWaveNodeValueStoreValueType.String:
+					writer.WriteStringValue("string");
+					break;
+				case ZWaveNodeValueStoreValueType.NumberArray:
+					writer.WriteStringValue("number[]");
+					break;
+				case ZWaveNodeValueStoreValueType.BooleanArray:
+					writer.WriteStringValue("boolean[]");
+					break;
+				case ZWaveNodeValueStoreValueType.StringArray:
+					writer.WriteStringValue("string[]");
+					break;
+				case ZWaveNodeValueStoreValueType.Duration:
+					writer.WriteStringValue("duration");
+					break;
+				case ZWaveNodeValueStoreValueType.Color:
+					writer.WriteStringValue("color");
+					break;
+				case ZWaveNodeValueStoreValueType.Buffer:
+					writer.WriteStringValue("buffer");
+					break;
+				default:
+					throw new NotImplementedException();
+			}
+
+			return;
 		}
 	}
 

@@ -23,8 +23,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		long Steps { get; }
 		string Unit { get; }
 
-		//TODO - fix
-		//IDictionary<long, string> States { get; }
+		IDictionary<long, string> States { get; }
 	}
 
 	public class ZWaveNodeValueMetadata : IZWaveNodeValueMetadata
@@ -57,8 +56,8 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		public string Unit { get; set; }
 
-		//TODO - fix
-		//public IDictionary<long, string> States { get; set; }
+		[JsonConverter(typeof(ZWaveNodeMetaDataStateConverter))]
+		public IDictionary<long, string> States { get; set; }
 	}
 
 

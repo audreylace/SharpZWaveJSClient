@@ -58,7 +58,23 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Converters
 
 		public override void Write(Utf8JsonWriter writer, IStringOrNumberOrBool value, JsonSerializerOptions options)
 		{
-			throw new NotImplementedException();
+			if (value.Type == typeof(bool))
+			{
+				writer.WriteBooleanValue(value.ValueBool);
+			}
+			else if (value.Type == typeof(string))
+			{
+				writer.WriteStringValue(value.ValueString);
+			}
+			else if (value.Type == typeof(double))
+			{
+				writer.WriteNumberValue(value.ValueNumber);
+			}
+			else
+			{
+				throw new NotImplementedException();
+			}
+
 		}
 	}
 

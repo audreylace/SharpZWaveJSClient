@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
+
+	[JsonConverter(typeof(FLiRSConverter))]
 	public enum FLiRS
 	{
 		Unspecified,
@@ -47,7 +49,26 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		public override void Write(Utf8JsonWriter writer, FLiRS value, JsonSerializerOptions options)
 		{
-			throw new NotImplementedException();
+			switch (value)
+			{
+				case FLiRS.ValueLegacyTrue:
+					writer.WriteStringValue("true");
+					break;
+				case FLiRS.ValueFalse:
+					writer.WriteStringValue("false");
+					break;
+				case FLiRS.Value1000ms:
+					writer.WriteStringValue("1000ms");
+					break;
+				case FLiRS.Value250ms:
+					writer.WriteStringValue("250ms");
+					break;
+				case FLiRS.Unspecified:
+					writer.WriteNullValue();
+					break;
+				default:
+					throw new NotImplementedException();
+			}
 		}
 	}
 }

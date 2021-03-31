@@ -21,7 +21,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		public override void Write(Utf8JsonWriter writer, InterfaceType value, JsonSerializerOptions options)
 		{
-			throw new NotImplementedException();
+			JsonSerializer.Serialize<ImplementationType>(writer, (ImplementationType)value, options);
 		}
 	}
 }

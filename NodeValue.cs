@@ -22,8 +22,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		long CCVersion { get; }
 
 		IZWaveNodeValueMetadata Metadata { get; }
-
-		ZWaveNodeValueStoreValueType ValueType { get; }
 		object Value { get; }
 	}
 
@@ -49,8 +47,6 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeValueMetadata, ZWaveNodeValueMetadata>))]
 		public IZWaveNodeValueMetadata Metadata { get; set; }
-
-		public ZWaveNodeValueStoreValueType ValueType { get; set; }
 
 		public object Value { get; set; }
 	}

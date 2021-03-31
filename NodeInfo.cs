@@ -56,10 +56,12 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		ZWaveNodeInterviewStage InterviewStage { get; }
 
-		IZWaveNodeEndpointState[] EndPoints { get; }
+		IZWaveNodeEndpointState[] Endpoints { get; }
 
-		// Todo - Support Parsing
-		//	object DeviceConfig { get; }
+
+
+		[JsonPropertyName("deviceConfig")]
+		object DeviceConfigJson { get; }
 
 		IZWaveNodeValue[] Values { get; }
 
@@ -122,6 +124,7 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 			set { ZWavePlusRoleType = value; }
 		}
 
+
 		[JsonPropertyName("zwavePlusRoleType")]
 		public ZWavePlusNodeRoleType ZWavePlusRoleType { get; set; }
 
@@ -163,12 +166,11 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		public ZWaveNodeInterviewStage InterviewStage { get; set; }
 
 		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeEndpointState[], ZWaveNodeEndpointState[]>))]
-		public IZWaveNodeEndpointState[] EndPoints { get; set; }
+		public IZWaveNodeEndpointState[] Endpoints { get; set; }
 
 		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeValue[], ZWaveNodeValue[]>))]
 		public IZWaveNodeValue[] Values { get; set; }
 
-		[JsonConverter(typeof(FLiRSConverter))]
 		public FLiRS IsFrequentListening { get; set; }
 
 		[ObsoleteAttribute("This property has been renamed to ProtocolVersion as of Schema 3. New code should use ProtocolVersion instead as this property is scheduled to be removed in a future version.")]
@@ -204,5 +206,9 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		[SchemaVersion(3)]
 		public bool SupportsSecurity { get; set; }
+
+		[JsonPropertyName("deviceConfig")]
+		[Obsolete("Property DeviceConfigJson will be replaced with a structured object in a future version. Development should be scheduled to handle reading from a C# object once this change over occurs.")]
+		public object DeviceConfigJson { get; set; }
 	}
 }
