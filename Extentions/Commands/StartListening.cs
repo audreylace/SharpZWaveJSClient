@@ -1,7 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
-
-using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient.Extentions.Commands
 {
@@ -18,15 +19,24 @@ namespace AudreysCloud.Community.SharpZWaveJSClient.Extentions.Commands
 			await connection.SendCommandAsync(command, cancellationToken);
 			return command.MessageId;
 		}
+
+		public static StartListeningCommandResult ParseStartListeningCommand(this SharpZWaveJSClient connection, JsonElement result)
+		{
+			JsonElement stateElement = result.GetProperty("state");
+			return JsonSerializer.Deserialize<StartListeningCommandResult>(stateElement.GetRawText(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+		}
 	}
 
 	public class StartListeningCommandResult
 	{
-		public IControllerInfo ControllerInfo { get; private set; }
-		public StartListeningCommandResult(string ResultJson)
-		{
+		[JsonConverter(typeof(ImplementInterfaceConverter<IControllerInfo, ControllerInfo>))]
+		[JsonInclude]
+		public IControllerInfo Controller { get; private set; }
 
-		}
+		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeInfo[], ZWaveNodeInfo[]>))]
+		[JsonInclude]
+		public IZWaveNodeInfo[] Nodes { get; private set; }
+
 
 	}
 

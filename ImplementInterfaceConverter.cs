@@ -4,14 +4,22 @@ using System.Text.Json.Serialization;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
-	public class ImplementInterfaceConverter<T> : JsonConverter<T>
+	public class ImplementInterfaceConverter<InterfaceType, ImplementationType> : JsonConverter<InterfaceType> where ImplementationType : InterfaceType
 	{
-		public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+
+		public override InterfaceType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			return JsonSerializer.Deserialize<T>(ref reader, options);
+
+			if (reader.TokenType != JsonTokenType.StartObject && reader.TokenType != JsonTokenType.StartArray)
+			{
+				throw new JsonException();
+			}
+
+			return (InterfaceType)JsonSerializer.Deserialize<ImplementationType>(ref reader, options);
+
 		}
 
-		public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+		public override void Write(Utf8JsonWriter writer, InterfaceType value, JsonSerializerOptions options)
 		{
 			throw new NotImplementedException();
 		}

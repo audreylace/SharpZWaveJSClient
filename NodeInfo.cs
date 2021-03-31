@@ -11,8 +11,8 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		long Index { get; }
 
-		string InstallerIcon { get; }
-		string UserIcon { get; }
+		long InstallerIcon { get; }
+		long UserIcon { get; }
 
 		ZWaveNodeStatus Status { get; }
 
@@ -91,9 +91,9 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		public long Index { get; set; }
 
-		public string InstallerIcon { get; set; }
+		public long InstallerIcon { get; set; }
 
-		public string UserIcon { get; set; }
+		public long UserIcon { get; set; }
 
 		public ZWaveNodeStatus Status { get; set; }
 
@@ -162,10 +162,10 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 
 		public ZWaveNodeInterviewStage InterviewStage { get; set; }
 
-		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveNodeEndpointState>))]
+		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeEndpointState[], ZWaveNodeEndpointState[]>))]
 		public IZWaveNodeEndpointState[] EndPoints { get; set; }
 
-		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveNodeValue>))]
+		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeValue[], ZWaveNodeValue[]>))]
 		public IZWaveNodeValue[] Values { get; set; }
 
 		[JsonConverter(typeof(FLiRSConverter))]
@@ -196,10 +196,10 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		[SchemaVersion(3)]
 		public ZWaveNodeDataRate SupportedDataRates { get; set; }
 
-		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveNodeDeviceClass>))]
+		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeDeviceClass, ZWaveNodeDeviceClass>))]
 		public IZWaveNodeDeviceClass DeviceClass { get; set; }
 
-		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveCommandClass>))]
+		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveCommandClass[], ZWaveCommandClass[]>))]
 		public IZWaveCommandClass[] CommandClasses { get; set; }
 
 		[SchemaVersion(3)]

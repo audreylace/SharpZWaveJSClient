@@ -9,8 +9,8 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 	{
 		long NodeId { get; }
 		long Index { get; }
-		string InstallerIcon { get; }
-		string UserIcon { get; }
+		long InstallerIcon { get; }
+		long UserIcon { get; }
 
 		[SchemaVersion(3)]
 		IZWaveNodeDeviceClass DeviceClass { get; }
@@ -25,14 +25,14 @@ namespace AudreysCloud.Community.SharpZWaveJSClient
 		public long Index { get; set; }
 
 
-		public string InstallerIcon { get; set; }
+		public long InstallerIcon { get; set; }
 
 
-		public string UserIcon { get; set; }
+		public long UserIcon { get; set; }
 
 		[SchemaVersion(3)]
 
-		[JsonConverter(typeof(ImplementInterfaceConverter<ZWaveNodeDeviceClass>))]
+		[JsonConverter(typeof(ImplementInterfaceConverter<IZWaveNodeDeviceClass, ZWaveNodeDeviceClass>))]
 		public IZWaveNodeDeviceClass DeviceClass { get; set; }
 
 	}
