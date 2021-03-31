@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using AudreysCloud.Community.SharpZWaveJSClient.Attributes.Schema;
 using AudreysCloud.Community.SharpZWaveJSClient.Utils;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient

@@ -1,5 +1,5 @@
 
-namespace AudreysCloud.Community.SharpZWaveJSClient
+namespace AudreysCloud.Community.SharpZWaveJSClient.Attributes.Schema
 {
 	public class SchemaVersionAttribute : System.Attribute
 	{
