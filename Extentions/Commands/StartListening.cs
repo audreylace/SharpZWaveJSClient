@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using AudreysCloud.Community.SharpZWaveJSClient.Utils;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient.Extentions.Commands
 {

@@ -2,7 +2,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AudreysCloud.Community.SharpZWaveJSClient
+namespace AudreysCloud.Community.SharpZWaveJSClient.Utils
 {
 	public class ImplementInterfaceConverter<InterfaceType, ImplementationType> : JsonConverter<InterfaceType> where ImplementationType : InterfaceType
 	{

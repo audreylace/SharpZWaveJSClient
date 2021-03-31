@@ -2,7 +2,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AudreysCloud.Community.SharpZWaveJSClient.Converters
+namespace AudreysCloud.Community.SharpZWaveJSClient.Utils
 {
 	public interface IStringOrNumberOrBool
 	{

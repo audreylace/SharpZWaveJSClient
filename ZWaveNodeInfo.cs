@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AudreysCloud.Community.SharpZWaveJSClient.Utils;
 
 namespace AudreysCloud.Community.SharpZWaveJSClient
 {
